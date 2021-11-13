@@ -1,0 +1,63 @@
+static def releaseTime() { return new Date().format("MMddHHmm") }
+
+static def isDebugMode(String buildType) { return buildType == "debug" }
+
+ext.appVersionCode = 1
+ext.appVersionName = "100286"
+
+android {
+    flavorDimensions "default"
+    productFlavors {
+        insut {
+
+        }//盈塑
+        longte {
+
+        }//朗特
+    }
+
+    applicationVariants.all { variant ->
+        def mergedFlavor = variant.mergedFlavor
+        Properties tempPro = new Properties()
+        switch (variant.flavorName) {
+            case "insut":
+                if (isDebugMode(variant.buildType.name)) {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("insut-debug.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
+                } else {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("insut-release.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                }
+                mergedFlavor.manifestPlaceholders = [
+                        APP_NAME: tempPro['APP_NAME'],
+                ]
+                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                variant.outputs.all {
+                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
+                }
+                ext.appVersionCode = tempPro['VERSION_CODE']
+                ext.appVersionName = tempPro['VERSION_NAME']
+                break
+            case "longte":
+                if (isDebugMode(variant.buildType.name)) {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("longte-debug.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
+                } else {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("longte-release.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                }
+                mergedFlavor.manifestPlaceholders = [
+                        APP_NAME: tempPro['APP_NAME'],
+                ]
+                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                variant.outputs.all {
+                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
+                }
+                break
+        }
+    }
+}
