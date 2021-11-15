@@ -19,7 +19,6 @@ object HttpHelper {
         .writeTimeout(DEFAULT_TIMEOUT.toLong(), TimeUnit.SECONDS)
         .connectTimeout(DEFAULT_TIMEOUT.toLong(), TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
-        .addInterceptor(RetrofitRetry(5))
         .addInterceptor(LoggingInterceptor())
         .addInterceptor(RetryAndChangeIpInterceptor.Builder().retryCount(Int.MAX_VALUE).retryInterval(2000).build())
         .build()

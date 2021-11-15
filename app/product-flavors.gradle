@@ -2,17 +2,17 @@ static def releaseTime() { return new Date().format("MMddHHmm") }
 
 static def isDebugMode(String buildType) { return buildType == "debug" }
 
-ext.appVersionCode = 1
-ext.appVersionName = "100286"
+ext.appVersionCode = 26
+ext.appVersionName = "1.0.26"
 
 android {
     flavorDimensions "default"
     productFlavors {
         insut {
-
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'
         }//盈塑
         longte {
-
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '10'
         }//朗特
     }
 

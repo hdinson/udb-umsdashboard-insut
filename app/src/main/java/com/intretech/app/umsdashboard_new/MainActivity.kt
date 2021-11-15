@@ -1,5 +1,6 @@
 package com.intretech.app.umsdashboard_new
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
@@ -7,7 +8,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -16,10 +16,10 @@ import android.view.View
 import android.view.WindowManager
 import android.webkit.*
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.intretech.app.umsdashboard_new.api.ServiceApi
+import com.intretech.app.umsdashboard_new.bean.BoardInfoKt
 import com.intretech.app.umsdashboard_new.http.HttpHelper
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
 import com.intretech.app.umsdashboard_new.utils.MainErrorLayoutController
@@ -56,7 +56,11 @@ class MainActivity : AppCompatActivity() {
         MMKV.initialize(this)
         initWebView()
 
-        loadBaseUrl()
+        if (BuildConfig.POLLING_HOME_PAGE_URL > 0) {
+            refreshUIByTimer()
+        } else {
+            loadBaseUrl()
+        }
     }
 
     private fun formatUrl(url: String): String {
@@ -145,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
-    inner class MainWebViewClient() : WebViewClient() {
+    inner class MainWebViewClient : WebViewClient() {
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
             Log.i("TAG", "开始加载界面：$url")
@@ -236,17 +240,41 @@ class MainActivity : AppCompatActivity() {
     /**
      * 重新加载网页地址
      */
+    private val mApi by lazy { HttpHelper.create(ServiceApi::class.java) }
     private fun loadBaseUrl() {
-        HttpHelper.create(ServiceApi::class.java).getHomePage(MMKVUtils.getMacAddrWithoutDot())
+        mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                Log.e("TAG", "loadBaseUrl before: $it")
-                mHomePage = formatUrl(it.boardHomePage)
-                Log.e("TAG", "loadBaseUrl format: ${it.boardHomePage}")
-                mAgentWeb.urlLoader.loadUrl(mHomePage)
+                setHttpResult(it)
             }, {
                 it.printStackTrace()
             })
+    }
+
+    private fun refreshUIByTimer() {
+        Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
+            .flatMap { mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot()) }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                if (it.boardHomePage.isNotEmpty()) {
+                    val newUrl = formatUrl(it.boardHomePage)
+                    if (mHomePage != newUrl) {
+                        //未加载网页，或者服务端更新网页地址，重新加载
+                        Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
+                        setHttpResult(it)
+                    }
+                }
+            }, {
+                it.printStackTrace()
+            })
+    }
+
+    private fun setHttpResult(info: BoardInfoKt) {
+        Log.e("TAG", "loadBaseUrl before: $info")
+        mHomePage = formatUrl(info.boardHomePage)
+        Log.e("TAG", "loadBaseUrl format: ${info.boardHomePage}")
+        mAgentWeb.urlLoader.loadUrl(mHomePage)
     }
 }

@@ -12,9 +12,12 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_setting.*
+import retrofit2.http.Url
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.net.URI
+import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
@@ -53,7 +56,7 @@ class SettingActivity : AppCompatActivity() {
 
         btnPing.setOnClickListener {
             tvPingDetails.text = ""
-           ping()
+            ping()
         }
 
 
@@ -76,25 +79,25 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
-    private val lines = ArrayList<String>()
     private fun ping() {
         val ip = BuildConfig.BASE_URL
+        val host = URI.create(ip).host
         val sizeStr = "64"
-        val time = "5"
+        val time = "1"
 
         val size = sizeStr.toInt() - 8
-        val command = "ping -s $size -w $time api.longtechcc.com"
+        val command = "ping -s $size -w $time $host"
 
         // 注：正常ping数据和错误ping数据可能会交替输出，所以需要开两个线程同时读取
         val process = Runtime.getRuntime().exec(command)
+
+
         val inputStreamThread = readData(process.inputStream) // 读取正常ping数据
         val errorStreamThread = readData(process.errorStream) // 读取错误ping数据
 
         // 等待两个读取线程结束
         inputStreamThread.join()
         errorStreamThread.join()
-
-        Log.e("TAG", "ping: $lines" )
     }
 
     private fun readData(inputStream: InputStream?) = thread {
@@ -112,10 +115,9 @@ class SettingActivity : AppCompatActivity() {
     }
 
     private fun addData(data: String) {
-        lines.add(data)
         tvPingDetails.append(data)
+        tvPingDetails.append("\n")
     }
-
 
 
     /**
