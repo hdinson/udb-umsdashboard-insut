@@ -1,6 +1,5 @@
 package com.intretech.app.umsdashboard_new
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
@@ -8,6 +7,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -16,6 +16,8 @@ import android.view.View
 import android.view.WindowManager
 import android.webkit.*
 import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.intretech.app.umsdashboard_new.api.ServiceApi
@@ -144,7 +146,7 @@ class MainActivity : AppCompatActivity() {
         }
         builder.setNeutralButton("否") { dialog, _ -> dialog.dismiss() }
         builder.setNegativeButton("设置参数") { _, _ ->
-            SettingActivity.start(this)
+            SettingActivity.start(this,mHomePage)
         }
         builder.show()
     }
@@ -155,18 +157,22 @@ class MainActivity : AppCompatActivity() {
             Log.i("TAG", "开始加载界面：$url")
         }
 
+
         override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
             super.onReceivedError(view, request, error)
-
-            Log.e("TAG", "加载失败")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Log.e("TAG", "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}" )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Log.e("TAG", "加载失败: -- description: ${error?.description}, errorCode:${error?.errorCode}" )
+                }
+            }
             if (mLoadErrorDialog.isShowing) return
             mLoadErrorDialog.show()
             val down = countdown(10).subscribe {
                 mLoadErrorDialog.setMessage("您是否要使用外部浏览器打开？ ${it}秒后重试")
                 if (it <= 0) {
                     mLoadErrorDialog.dismiss()
-                    val formatHomePageUrl = formatUrl(mHomePage)
-                    mAgentWeb.urlLoader.loadUrl(formatHomePageUrl)
+                    loadBaseUrl()
                 }
             }
             mCompositeDisposable.add(down)
@@ -200,15 +206,19 @@ class MainActivity : AppCompatActivity() {
         builder.setTitle("加载失败")
         builder.setMessage("您是否要使用外部浏览器打开？")
         builder.setPositiveButton("是") { dialog, _ ->
-            val formatHomePageUrl = formatUrl(mHomePage)
-            val uri = Uri.parse(formatHomePageUrl)
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
+            try {
+                val formatHomePageUrl = formatUrl(mHomePage)
+                val uri = Uri.parse(formatHomePageUrl)
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "当前设备未安装外部浏览器", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
         }
         builder.setNegativeButton("重试") { dialog, _ ->
             dialog.dismiss()
-            val formatHomePageUrl = formatUrl(mHomePage)
-            mAgentWeb.urlLoader.loadUrl(formatHomePageUrl)
+            loadBaseUrl()
         }
         builder.setCancelable(false)
         builder.create()
@@ -275,6 +285,7 @@ class MainActivity : AppCompatActivity() {
         Log.e("TAG", "loadBaseUrl before: $info")
         mHomePage = formatUrl(info.boardHomePage)
         Log.e("TAG", "loadBaseUrl format: ${info.boardHomePage}")
+        mAgentWeb.urlLoader.stopLoading()
         mAgentWeb.urlLoader.loadUrl(mHomePage)
     }
 }

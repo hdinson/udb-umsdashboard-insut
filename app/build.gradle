@@ -28,7 +28,6 @@ android {
     }
     buildTypes {
         debug {
-           
             debuggable true
             signingConfig signingConfigs.release
         }
@@ -44,17 +43,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-    }
-
-
-    android.applicationVariants.all { variant ->
-        variant.outputs.all {
-            if (variant.buildType.name == "release") {
-                outputFileName = "insut_ukanban_v${defaultConfig.versionName}_${defaultConfig.versionCode}_${new Date().format("MMddHHmm")}_${variant.buildType.name}.apk"
-            } else {
-                outputFileName = "insut_ukanban_v${defaultConfig.versionName}_${variant.buildType.name}.apk"
-            }
-        }
     }
 }
 

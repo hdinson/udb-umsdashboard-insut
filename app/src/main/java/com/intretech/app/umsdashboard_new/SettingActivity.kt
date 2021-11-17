@@ -2,29 +2,30 @@ package com.intretech.app.umsdashboard_new
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.intretech.app.umsdashboard_new.http.HttpHelper
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_setting.*
-import retrofit2.http.Url
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.URI
-import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
+import com.intretech.app.umsdashboard_new.ping.PingJob
+
 
 class SettingActivity : AppCompatActivity() {
 
     private var hasChange = false
+    private var isPingMode = false
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +33,13 @@ class SettingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_setting)
 
         tvVersion.text = "版本号:   v${getVersionName()}"
+        tvHomePage.text = "网页加载地址: ${intent.getStringExtra(EXTRA_HOME_PAGE)}"
+        btnCopyHomePage.setOnClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("words", intent.getStringExtra(EXTRA_HOME_PAGE))
+            clipboard.primaryClip = clip
+            Toast.makeText(this, "已复制", Toast.LENGTH_SHORT).show()
+        }
         etServerAddr.setText(MMKVUtils.getBaseUrl())
         etMacAddr.setText(MMKVUtils.getMac())
 
@@ -55,11 +63,16 @@ class SettingActivity : AppCompatActivity() {
         }
 
         btnPing.setOnClickListener {
-            tvPingDetails.text = ""
-            ping()
+            if (isPingMode){
+                btnPing.text  ="PING"
+                isPingMode = false
+                mPingJob?.Stop()
+            }else{
+                btnPing.text = "STOP"
+                isPingMode = true
+                ping()
+            }
         }
-
-
     }
 
     private fun getVersionName(): String {
@@ -73,13 +86,28 @@ class SettingActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_CODE = 11001
-
-        fun start(act: Activity) {
-            act.startActivityForResult(Intent(act, SettingActivity::class.java), REQ_CODE)
+        private const val EXTRA_HOME_PAGE = "home_page"
+        fun start(act: Activity, homePage: String) {
+            val intent = Intent(act, SettingActivity::class.java)
+            intent.putExtra(EXTRA_HOME_PAGE, homePage)
+            act.startActivityForResult(intent, REQ_CODE)
         }
     }
 
+    private var mPingJob: PingJob? = null
+
     private fun ping() {
+        val homePage = intent.getStringExtra(EXTRA_HOME_PAGE)
+        if (homePage.isNotEmpty()) {
+            val uri = URI.create(homePage)
+            mPingJob = PingJob(uri.host, uri.port, tvPingDetails)
+            mPingJob?.Start()
+        } else {
+            Toast.makeText(this, "当前web地址为空，请返回重试", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun ping2() {
         val ip = BuildConfig.BASE_URL
         val host = URI.create(ip).host
         val sizeStr = "64"
@@ -130,5 +158,11 @@ class SettingActivity : AppCompatActivity() {
         val pattern = Pattern.compile(regex)
         val matcher = pattern.matcher(ip)
         return matcher.matches()
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mPingJob?.Stop()
     }
 }

@@ -9,10 +9,10 @@ android {
     flavorDimensions "default"
     productFlavors {
         insut {
-            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'   //轮询首页地址接口（单位秒）
         }//盈塑
         longte {
-            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '10'
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }//朗特
     }
 
