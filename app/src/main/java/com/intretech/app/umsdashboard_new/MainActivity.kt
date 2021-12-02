@@ -6,9 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.KeyEvent
@@ -17,29 +18,39 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.intretech.app.umsdashboard_new.api.ServiceApi
 import com.intretech.app.umsdashboard_new.bean.BoardInfoKt
+import com.intretech.app.umsdashboard_new.bean.LogMessage
 import com.intretech.app.umsdashboard_new.http.HttpHelper
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
 import com.intretech.app.umsdashboard_new.utils.MainErrorLayoutController
 import com.just.agentweb.AgentWeb
 import com.just.agentweb.AgentWebConfig
+import com.just.agentweb.WebChromeClient
 import com.just.agentweb.WebViewClient
 import com.tencent.mmkv.MMKV
+import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
+import com.yirong.library.annotation.NetType
+import com.yirong.library.annotation.NetworkListener
+import com.yirong.library.manager.NetworkManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
-class MainActivity : AppCompatActivity() {
 
-    private val mCompositeDisposable = CompositeDisposable()
+class MainActivity : RxAppCompatActivity() {
+
+    private var mHttpDisposable: Disposable? = null
+    private var mPollingDisposable:Disposable?=null
     private var mHomePage = ""
     private val mAgentWeb by lazy {
         AgentWeb.with(this)
@@ -47,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             .useDefaultIndicator(ActivityCompat.getColor(this, R.color.gray), 4)
             .setAgentWebUIController(MainErrorLayoutController())
             .setWebViewClient(MainWebViewClient())
+            .setWebChromeClient(MainChromeWebViewClient())
             .createAgentWeb()
             .get()
     }
@@ -63,18 +75,30 @@ class MainActivity : AppCompatActivity() {
         } else {
             loadBaseUrl()
         }
-    }
+        NetworkManager.getDefault().init(application)
+        NetworkManager.getDefault().registerObserver(this)
 
-    private fun formatUrl(url: String): String {
-        if (url.isEmpty()) return ""
-        var newUrl = url
-        if (url.startsWith("http").not()) {
-            newUrl = "http://$url"
+        tvLog.setOnClickListener {
+            homePageReload()
         }
-        val qrCode = if (MMKVUtils.isShowHomePageQrCode()) "&isQRCode=1" else ""
-        return "${newUrl}&IsNewApp=1$qrCode"
     }
 
+    //网络监听
+    @NetworkListener(type = NetType.WIFI)
+    fun netork(@NetType type: String) {
+        when (type) {
+            NetType.AUTO,
+            NetType.CMNET,
+            NetType.CMWAP,
+            NetType.WIFI -> {
+                homePageReload()
+                EventBus.getDefault().post(LogMessage("网络已连接, 正在刷新"))
+            }
+            NetType.NONE -> {
+                EventBus.getDefault().post(LogMessage("网络已断开"))
+            }
+        }
+    }
 
     /**
      * 初始化WebView
@@ -85,10 +109,11 @@ class MainActivity : AppCompatActivity() {
         mAgentWeb.webCreator.webView.apply {
             overScrollMode = View.SCROLLBARS_INSIDE_OVERLAY
 
+            isHorizontalScrollBarEnabled = false
+            isVerticalScrollBarEnabled = false
             val manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val outMetrics = DisplayMetrics()
             manager.defaultDisplay.getMetrics(outMetrics)
-
             val screenWidth = outMetrics.widthPixels
             val screenHeight = outMetrics.heightPixels
             val scaleRate =
@@ -99,6 +124,13 @@ class MainActivity : AppCompatActivity() {
             setInitialScale(scaleNumber)
             setBackgroundColor(Color.TRANSPARENT)
             setBackgroundResource(R.mipmap.img_ukanban)
+            settings.apply {
+                javaScriptEnabled = true //启用js
+                javaScriptCanOpenWindowsAutomatically = true//支持通过JS打开新窗口
+                domStorageEnabled = true //保存数据 
+                blockNetworkImage = false //解决图片不显示 
+                loadsImagesAutomatically = true //支持自动加载图片
+            }
         }
         mAgentWeb.webCreator.webParentLayout.apply {
             setBackgroundColor(Color.TRANSPARENT)
@@ -109,6 +141,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: LogMessage?) {
+        tvLog.text = event?.msg ?: ""
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
 
     override fun onPause() {
         mAgentWeb?.webLifeCycle?.onPause()
@@ -122,7 +168,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         mAgentWeb?.webLifeCycle?.onDestroy()
-        mCompositeDisposable.clear()
+        //mCompositeDisposable.clear()
+        NetworkManager.getDefault().unRegisterAllObserver()
         super.onDestroy()
     }
 
@@ -146,48 +193,74 @@ class MainActivity : AppCompatActivity() {
         }
         builder.setNeutralButton("否") { dialog, _ -> dialog.dismiss() }
         builder.setNegativeButton("设置参数") { _, _ ->
-            SettingActivity.start(this,mHomePage)
+            SettingActivity.start(this, mHomePage)
         }
         builder.show()
     }
 
+    inner class MainChromeWebViewClient : WebChromeClient() {
+        override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+            Toast.makeText(this@MainActivity,message,Toast.LENGTH_SHORT).show()
+            result?.cancel()
+            return true
+        }
+    }
+
     inner class MainWebViewClient : WebViewClient() {
+
+        val LONGTIMEOUT = 15000L //超时时间
+
+
+        val mHandler = @SuppressLint("HandlerLeak")
+        object : Handler() {
+            override fun handleMessage(msg: Message?) {
+                when (msg?.what) {
+                    0x01 -> {
+                        homePageReload()
+                        EventBus.getDefault().post(LogMessage("Reloading page.."))
+                    }
+                }
+            }
+        }
+
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            super.onPageStarted(view, url, favicon)
             Log.i("TAG", "开始加载界面：$url")
+            super.onPageStarted(view, url, favicon)
+        }
+
+        override fun onLoadResource(view: WebView?, url: String?) {
+            super.onLoadResource(view, url)
+            Log.i("TAG", "正在加载：$url")
+
+        }
+
+        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+            super.onReceivedError(view, errorCode, description, failingUrl)
+            Log.e("TAG", "加载失败2: -- url:${failingUrl}, description:${description}")
+            homePageReload()
         }
 
 
         override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
             super.onReceivedError(view, request, error)
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Log.e("TAG", "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}" )
+                Log.e("TAG", "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Log.e("TAG", "加载失败: -- description: ${error?.description}, errorCode:${error?.errorCode}" )
+                    if (request?.isForMainFrame == false) return
+                    EventBus.getDefault().post(LogMessage(error?.description.toString()))
+                    mHandler.sendEmptyMessageDelayed(0x01, 2000)
                 }
+            } else {
+                homePageReload()
             }
-            if (mLoadErrorDialog.isShowing) return
-            mLoadErrorDialog.show()
-            val down = countdown(10).subscribe {
-                mLoadErrorDialog.setMessage("您是否要使用外部浏览器打开？ ${it}秒后重试")
-                if (it <= 0) {
-                    mLoadErrorDialog.dismiss()
-                    loadBaseUrl()
-                }
-            }
-            mCompositeDisposable.add(down)
         }
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
             Log.i("TAG", "${mAgentWeb.webCreator.webView.progress} url:${url} --- 加载进度")
             if (mAgentWeb.webCreator.webView.progress != 100) return
-            // if (url != "about:blank") iv.hide(true)
-        }
-
-        override fun onLoadResource(view: WebView?, url: String?) {
-            super.onLoadResource(view, url)
-            Log.i("TAG", "正在加载：$url")
+            EventBus.getDefault().post(LogMessage())
         }
 
 
@@ -196,55 +269,23 @@ class MainActivity : AppCompatActivity() {
             Log.i("TAG", "onReceivedHttpError：${request}")
         }
 
-        override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
-            return super.onRenderProcessGone(view, detail)
+        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+            return true
+        }
+
+        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+            return true
         }
     }
 
-    private val mLoadErrorDialog by lazy {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("加载失败")
-        builder.setMessage("您是否要使用外部浏览器打开？")
-        builder.setPositiveButton("是") { dialog, _ ->
-            try {
-                val formatHomePageUrl = formatUrl(mHomePage)
-                val uri = Uri.parse(formatHomePageUrl)
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(this, "当前设备未安装外部浏览器", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-        }
-        builder.setNegativeButton("重试") { dialog, _ ->
-            dialog.dismiss()
-            loadBaseUrl()
-        }
-        builder.setCancelable(false)
-        builder.create()
-    }
-
-    /**
-     * 倒计时
-     * @param time 从第几秒开始倒计时
-     */
-    fun countdown(time: Int): Observable<Int> {
-        var countTime = time
-        if (countTime < 0) {
-            countTime = 0
-        }
-        return Observable.interval(0, 1, TimeUnit.SECONDS)
-            .map { countTime - it.toInt() }
-            .take((countTime + 1).toLong())
-            .subscribeOn(Schedulers.io())
-            .unsubscribeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        loadBaseUrl()
+        if (resultCode == RESULT_OK) {
+            loadBaseUrl()
+        } else if (BuildConfig.POLLING_HOME_PAGE_URL <= 0) {
+            loadBaseUrl()
+        }
     }
 
     /**
@@ -252,28 +293,41 @@ class MainActivity : AppCompatActivity() {
      */
     private val mApi by lazy { HttpHelper.create(ServiceApi::class.java) }
     private fun loadBaseUrl() {
-        mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot())
+        mHttpDisposable?.dispose()
+        mHttpDisposable = mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .compose(bindToLifecycle())
             .subscribe({
-                setHttpResult(it)
+                if (!it.isSuccessful) return@subscribe
+                val bean = it.body() ?: return@subscribe
+                homePageReload(bean)
             }, {
                 it.printStackTrace()
             })
     }
 
     private fun refreshUIByTimer() {
-        Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
+        mPollingDisposable?.dispose()
+        mPollingDisposable = Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
             .flatMap { mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot()) }
+            .compose(bindToLifecycle())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (it.boardHomePage.isNotEmpty()) {
-                    val newUrl = formatUrl(it.boardHomePage)
-                    if (mHomePage != newUrl) {
-                        //未加载网页，或者服务端更新网页地址，重新加载
-                        Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
-                        setHttpResult(it)
+                if (!it.isSuccessful) return@subscribe
+                val bean = it.body() ?: return@subscribe
+                if (bean.boardHomePage.isNotEmpty()) {
+                    val isRetry = it.headers()["isRetry"]
+                    if (isRetry.isNullOrEmpty()) {
+                        //非重试
+                        if (mHomePage != bean.boardHomePage) {
+                            //未加载网页，或者服务端更新网页地址，重新加载
+                            Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
+                            homePageReload(bean)
+                        }
+                    } else {
+                        homePageReload(bean)
                     }
                 }
             }, {
@@ -281,10 +335,11 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    private fun setHttpResult(info: BoardInfoKt) {
-        Log.e("TAG", "loadBaseUrl before: $info")
-        mHomePage = formatUrl(info.boardHomePage)
-        Log.e("TAG", "loadBaseUrl format: ${info.boardHomePage}")
+    private fun homePageReload(info: BoardInfoKt? = null) {
+        info?.apply { mHomePage = boardHomePage }
+        Log.e("TAG", "LoadBaseUrl: $mHomePage")
+        mAgentWeb.clearWebCache()
+        mAgentWeb.webCreator.webView.reload()
         mAgentWeb.urlLoader.stopLoading()
         mAgentWeb.urlLoader.loadUrl(mHomePage)
     }

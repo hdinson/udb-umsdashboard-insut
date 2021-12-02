@@ -1,9 +1,12 @@
 package com.intretech.app.umsdashboard_new.http
 
+import android.util.EventLog
 import android.util.Log
+import com.intretech.app.umsdashboard_new.bean.LogMessage
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
+import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.lang.Exception
 import kotlin.Throws
@@ -22,6 +25,7 @@ class RetryAndChangeIpInterceptor(private val maxRetryCount: Int, private val re
             url = switchServer(url)
             val newRequest = request.newBuilder().url(url).build()
             Log.d("intercept", "Request is not successful - $tryCount")
+            EventBus.getDefault().post(LogMessage("Request is not successful - $tryCount"))
             tryCount++
             // retry the request
             try {
@@ -32,8 +36,14 @@ class RetryAndChangeIpInterceptor(private val maxRetryCount: Int, private val re
             }
             response = doRequest(chain, newRequest)
         }
+        if (response != null && tryCount != 0) {
+            response = response.newBuilder().addHeader("isRetry", "true").build()
+        }
         if (response == null) {
             throw IOException()
+        }
+        if (tryCount==0){
+            EventBus.getDefault().post(LogMessage())
         }
         return response
     }

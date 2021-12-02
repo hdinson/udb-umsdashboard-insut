@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/crashErrorRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="@drawable/crash_activity_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp"
+    tools:context=".crash.ActivityCrash"
+    tools:ignore="HardcodedText">
+
+
+    <TextView
+        android:id="@+id/tvLogDetails"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        tools:text="fasdfasdfafsdfasdf" />
+
+
+    <TextView
+        android:id="@+id/tvCrashErrorLocateMoreInfo"
+        style="?borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:background="#55000000"
+        android:padding="10dp"
+        android:text="错误日志保存路径"
+        android:textColor="#3F51B5" />
+
+</LinearLayout>

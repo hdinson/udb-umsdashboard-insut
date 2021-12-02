@@ -2,6 +2,7 @@ package com.intretech.app.umsdashboard_new.api
 
 import com.intretech.app.umsdashboard_new.bean.BoardInfoKt
 import io.reactivex.Observable
+import retrofit2.Response
 import retrofit2.http.*
 
 interface ServiceApi {
@@ -11,6 +12,6 @@ interface ServiceApi {
      */
     @Headers("Domain-Name: uKanban")
     @GET("/API/Base/Board/NonLogin/BoardEvent/GetBoardFormJson")
-    fun getHomePage(@Query("MacAddress") MacAddress: String): Observable<BoardInfoKt>
+    fun getHomePage(@Query("MacAddress") MacAddress: String): Observable<Response<BoardInfoKt>>
 
 }

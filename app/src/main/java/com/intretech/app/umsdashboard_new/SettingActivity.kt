@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -32,7 +33,7 @@ class SettingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setting)
 
-        tvVersion.text = "版本号:   v${getVersionName()}"
+        tvVersion.text = "版本号:   v${getVersionName()}  Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
         tvHomePage.text = "网页加载地址: ${intent.getStringExtra(EXTRA_HOME_PAGE)}"
         btnCopyHomePage.setOnClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -56,11 +57,11 @@ class SettingActivity : AppCompatActivity() {
             finish()
         }
 
-        cbShowQrCode.isChecked = MMKVUtils.isShowHomePageQrCode()
+       /* cbShowQrCode.isChecked = MMKVUtils.isShowHomePageQrCode()
         cbShowQrCode.setOnCheckedChangeListener { _, isChecked ->
             hasChange = true
             MMKVUtils.setHomePageIsShowQrCode(isChecked)
-        }
+        }*/
 
         btnPing.setOnClickListener {
             if (isPingMode){
@@ -104,6 +105,7 @@ class SettingActivity : AppCompatActivity() {
             mPingJob?.Start()
         } else {
             Toast.makeText(this, "当前web地址为空，请返回重试", Toast.LENGTH_SHORT).show()
+            setResult(RESULT_OK)
         }
     }
 
