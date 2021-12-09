@@ -21,12 +21,12 @@ import kotlin.system.exitProcess
 
 object CrashTool {
     private const val TAG = "CrashTool"
-    private const val EXTRA_CONFIG = "com.dinson.blingbase.EXTRA_CONFIG"
-    private const val EXTRA_STACK_TRACE = "com.dinson.blingbase.EXTRA_STACK_TRACE"
-    private const val EXTRA_ACTIVITY_LOG = "com.dinson.blingbase.EXTRA_ACTIVITY_LOG"
-    private const val INTENT_ACTION_ERROR_ACTIVITY = "com.dinson.blingbase.ERROR"
-    private const val INTENT_ACTION_RESTART_ACTIVITY = "com.dinson.blingbase.RESTART"
-    private const val TAM_HANDLER_PACKAGE_NAME = "com.dinson.blingbase"
+    private const val TAM_HANDLER_PACKAGE_NAME = "com.intretech.app.umsdashboard_new"
+    private const val EXTRA_CONFIG = "com.intretech.app.umsdashboard_new.EXTRA_CONFIG"
+    private const val EXTRA_STACK_TRACE = "com.intretech.app.umsdashboard_new.EXTRA_STACK_TRACE"
+    private const val EXTRA_ACTIVITY_LOG = "com.intretech.app.umsdashboard_new.EXTRA_ACTIVITY_LOG"
+    private const val INTENT_ACTION_ERROR_ACTIVITY = "com.intretech.app.umsdashboard_new.ERROR"
+    private const val INTENT_ACTION_RESTART_ACTIVITY = "com.intretech.app.umsdashboard_new.RESTART"
     private const val DEFAULT_HANDLER_PACKAGE_NAME = "com.android.internal.os"
     private const val TIME_TO_CONSIDER_FOREGROUND_MS = 500
     private const val MAX_STACK_TRACE_SIZE = 131071 //128 KB - 1

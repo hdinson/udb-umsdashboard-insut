@@ -50,7 +50,7 @@ import kotlin.math.sqrt
 class MainActivity : RxAppCompatActivity() {
 
     private var mHttpDisposable: Disposable? = null
-    private var mPollingDisposable:Disposable?=null
+    private var mPollingDisposable: Disposable? = null
     private var mHomePage = ""
     private val mAgentWeb by lazy {
         AgentWeb.with(this)
@@ -130,14 +130,16 @@ class MainActivity : RxAppCompatActivity() {
                 domStorageEnabled = true //保存数据 
                 blockNetworkImage = false //解决图片不显示 
                 loadsImagesAutomatically = true //支持自动加载图片
+                 loadWithOverviewMode = true     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
+                layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
+
+
+
             }
         }
         mAgentWeb.webCreator.webParentLayout.apply {
             setBackgroundColor(Color.TRANSPARENT)
             setBackgroundResource(R.mipmap.img_ukanban)
-        }
-        mAgentWeb.agentWebSettings.webSettings.apply {
-            loadWithOverviewMode = true     // 当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
         }
     }
 
@@ -199,8 +201,13 @@ class MainActivity : RxAppCompatActivity() {
     }
 
     inner class MainChromeWebViewClient : WebChromeClient() {
-        override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
-            Toast.makeText(this@MainActivity,message,Toast.LENGTH_SHORT).show()
+        override fun onJsAlert(
+            view: WebView?,
+            url: String?,
+            message: String?,
+            result: JsResult?
+        ): Boolean {
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
             result?.cancel()
             return true
         }
@@ -234,18 +241,30 @@ class MainActivity : RxAppCompatActivity() {
 
         }
 
-        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+        override fun onReceivedError(
+            view: WebView?,
+            errorCode: Int,
+            description: String?,
+            failingUrl: String?
+        ) {
             super.onReceivedError(view, errorCode, description, failingUrl)
             Log.e("TAG", "加载失败2: -- url:${failingUrl}, description:${description}")
             homePageReload()
         }
 
 
-        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+        override fun onReceivedError(
+            view: WebView?,
+            request: WebResourceRequest?,
+            error: WebResourceError?
+        ) {
             super.onReceivedError(view, request, error)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Log.e("TAG", "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}")
+                Log.e(
+                    "TAG",
+                    "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}"
+                )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (request?.isForMainFrame == false) return
                     EventBus.getDefault().post(LogMessage(error?.description.toString()))
@@ -264,18 +283,15 @@ class MainActivity : RxAppCompatActivity() {
         }
 
 
-        override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+        override fun onReceivedHttpError(
+            view: WebView?,
+            request: WebResourceRequest?,
+            errorResponse: WebResourceResponse?
+        ) {
             super.onReceivedHttpError(view, request, errorResponse)
             Log.i("TAG", "onReceivedHttpError：${request}")
         }
 
-        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-            return true
-        }
-
-        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-            return true
-        }
     }
 
 
@@ -309,30 +325,31 @@ class MainActivity : RxAppCompatActivity() {
 
     private fun refreshUIByTimer() {
         mPollingDisposable?.dispose()
-        mPollingDisposable = Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
-            .flatMap { mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot()) }
-            .compose(bindToLifecycle())
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                if (!it.isSuccessful) return@subscribe
-                val bean = it.body() ?: return@subscribe
-                if (bean.boardHomePage.isNotEmpty()) {
-                    val isRetry = it.headers()["isRetry"]
-                    if (isRetry.isNullOrEmpty()) {
-                        //非重试
-                        if (mHomePage != bean.boardHomePage) {
-                            //未加载网页，或者服务端更新网页地址，重新加载
-                            Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
+        mPollingDisposable =
+            Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
+                .flatMap { mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot()) }
+                .compose(bindToLifecycle())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    if (!it.isSuccessful) return@subscribe
+                    val bean = it.body() ?: return@subscribe
+                    if (bean.boardHomePage.isNotEmpty()) {
+                        val isRetry = it.headers()["isRetry"]
+                        if (isRetry.isNullOrEmpty()) {
+                            //非重试
+                            if (mHomePage != bean.boardHomePage) {
+                                //未加载网页，或者服务端更新网页地址，重新加载
+                                Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
+                                homePageReload(bean)
+                            }
+                        } else {
                             homePageReload(bean)
                         }
-                    } else {
-                        homePageReload(bean)
                     }
-                }
-            }, {
-                it.printStackTrace()
-            })
+                }, {
+                    it.printStackTrace()
+                })
     }
 
     private fun homePageReload(info: BoardInfoKt? = null) {

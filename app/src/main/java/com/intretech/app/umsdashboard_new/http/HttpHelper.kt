@@ -23,7 +23,7 @@ object HttpHelper {
         .addInterceptor(RetryAndChangeIpInterceptor.Builder().retryCount(Int.MAX_VALUE).retryInterval(2000).build())
         .build()
     private var mRetrofit = Retrofit.Builder()
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(JsonConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .baseUrl(MMKVUtils.getBaseUrl())
         .client(mOkHttpClient)
