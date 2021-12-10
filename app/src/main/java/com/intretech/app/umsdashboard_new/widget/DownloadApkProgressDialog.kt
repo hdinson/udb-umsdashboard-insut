@@ -14,6 +14,7 @@ import com.intretech.app.umsdashboard_new.bean.DownloadInfo
 import com.intretech.app.umsdashboard_new.download.DownloadManager
 import com.intretech.app.umsdashboard_new.download.listener.HttpDownOnNextListener
 import com.intretech.app.umsdashboard_new.download.model.DownloadState
+import com.intretech.app.umsdashboard_new.download.utils.DbDownUtil
 import kotlinx.android.synthetic.main.app_progress_download.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -46,7 +47,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
      * 下载文件
      */
     private fun downloadApk() {
-      /*  val info = DownloadInfo()
+        val info = DownloadInfo()
         val localPath = getExternalFilesDirs(context, "apk")[0].path + File.separator
         val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault())
         val currentDateTime = dateFormat.format(Date())
@@ -68,7 +69,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
             DownloadManager.getInstance().startDown(info)
         } else {
             installApkByGuide(downloadInfo.savePath)
-        }*/
+        }
     }
 
     //安装apk

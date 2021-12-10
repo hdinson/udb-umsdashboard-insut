@@ -13,8 +13,8 @@ android {
         applicationId "com.intretech.app.umsdashboard_new"
         minSdk 16
         targetSdk 28
-        versionCode 12
-        versionName "1.0.25.5"
+        versionCode 32
+        versionName "1.0.26"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
