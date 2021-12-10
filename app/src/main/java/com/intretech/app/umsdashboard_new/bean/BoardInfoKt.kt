@@ -1,8 +1,7 @@
 package com.intretech.app.umsdashboard_new.bean
 
 data class BoardInfoKt(
-    val boardHomePage: String = "",
-    val type: Int = 0        //3
+    val boardHomePage: String? = "",
 )
 /*{      "isExistBoard": 1, //是否存在对应的看板，1存在；0不存在
             "boardHomePage": "/API/MES/Index", //看板完整页面地址，当对应的看板不存在时返回默认页面地址；

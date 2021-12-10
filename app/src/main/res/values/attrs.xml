@@ -1,0 +1,17 @@
+<resources>
+
+    <!--版本更新进度条-->
+    <declare-styleable name="UpdateVersionProgressBar">
+        <attr name="uvProgressTextColor" format="color" />
+        <attr name="uvProgressTextSize" format="dimension" />
+        <attr name="uvProgressTextMarginTop" format="dimension" />
+        <attr name="uvUnreachedColor" format="color" />
+        <attr name="uvUnreachedBarHeight" format="dimension" />
+        <attr name="uvReachedColor" format="color" />
+        <attr name="uvReachedBarHeight" format="dimension" />
+        <attr name="uvTextVisibility" format="enum">
+            <enum name="visible" value="0" />
+            <enum name="invisible" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>

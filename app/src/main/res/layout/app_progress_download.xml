@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_rec_r8_bg"
+    android:backgroundTint="#333333"
+    android:maxWidth="100dp"
+    android:padding="20dp">
+
+    <com.intretech.app.umsdashboard_new.widget.UpdateVersionProgressBar
+        android:id="@+id/uvProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:max="100"
+        app:uvProgressTextColor="@color/white"
+        app:uvProgressTextMarginTop="5dp"
+        app:uvProgressTextSize="20sp"
+        app:uvReachedBarHeight="12dp"
+        app:uvReachedColor="#FFB031"
+        app:uvTextVisibility="visible"
+        app:uvUnreachedBarHeight="2dp"
+        app:uvUnreachedColor="@color/white" />
+</FrameLayout>

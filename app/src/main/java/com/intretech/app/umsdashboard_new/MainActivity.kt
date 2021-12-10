@@ -3,6 +3,7 @@ package com.intretech.app.umsdashboard_new
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -20,11 +21,13 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.intretech.app.umsdashboard_new.api.ServiceApi
+import com.intretech.app.umsdashboard_new.bean.ApkUpdateInfoKt
 import com.intretech.app.umsdashboard_new.bean.BoardInfoKt
 import com.intretech.app.umsdashboard_new.bean.LogMessage
 import com.intretech.app.umsdashboard_new.http.HttpHelper
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
 import com.intretech.app.umsdashboard_new.utils.MainErrorLayoutController
+import com.intretech.app.umsdashboard_new.widget.DownloadApkProgressDialog
 import com.just.agentweb.AgentWeb
 import com.just.agentweb.AgentWebConfig
 import com.just.agentweb.WebChromeClient
@@ -77,10 +80,26 @@ class MainActivity : RxAppCompatActivity() {
         }
         NetworkManager.getDefault().init(application)
         NetworkManager.getDefault().registerObserver(this)
+        checkUpdateApk()
+    }
 
-        tvLog.setOnClickListener {
-            homePageReload()
-        }
+    /**
+     * 检查更新
+     */
+    private fun checkUpdateApk() {
+
+        HttpHelper.create(ServiceApi::class.java).checkAppVersion()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                if (it.minVersion > BuildConfig.VERSION_CODE) {
+                    showUpdateApkDialog(true, it) //强更新
+                } else if (it.appVersionNum > BuildConfig.VERSION_CODE) {
+                    showUpdateApkDialog(apkUpdateInfo = it)// 通过versionName更新app名称以及下载地址
+                }
+            }, {
+                it.message?.apply { Toast.makeText(this@MainActivity, this, Toast.LENGTH_SHORT).show() }
+            })
     }
 
     //网络监听
@@ -116,10 +135,7 @@ class MainActivity : RxAppCompatActivity() {
             manager.defaultDisplay.getMetrics(outMetrics)
             val screenWidth = outMetrics.widthPixels
             val screenHeight = outMetrics.heightPixels
-            val scaleRate =
-                sqrt((screenWidth * screenWidth + screenHeight * screenHeight).toDouble()).toFloat() / sqrt(
-                    (1920 * 1920 + 1080 * 1080).toDouble()
-                ).toFloat() // 使用对角线比
+            val scaleRate = sqrt((screenWidth * screenWidth + screenHeight * screenHeight).toDouble()).toFloat() / sqrt((1920 * 1920 + 1080 * 1080).toDouble()).toFloat() // 使用对角线比
             val scaleNumber = (scaleRate * 100).toInt()
             setInitialScale(scaleNumber)
             setBackgroundColor(Color.TRANSPARENT)
@@ -130,11 +146,8 @@ class MainActivity : RxAppCompatActivity() {
                 domStorageEnabled = true //保存数据 
                 blockNetworkImage = false //解决图片不显示 
                 loadsImagesAutomatically = true //支持自动加载图片
-                 loadWithOverviewMode = true     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
+                loadWithOverviewMode = true     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
                 layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
-
-
-
             }
         }
         mAgentWeb.webCreator.webParentLayout.apply {
@@ -201,12 +214,7 @@ class MainActivity : RxAppCompatActivity() {
     }
 
     inner class MainChromeWebViewClient : WebChromeClient() {
-        override fun onJsAlert(
-            view: WebView?,
-            url: String?,
-            message: String?,
-            result: JsResult?
-        ): Boolean {
+        override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
             Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
             result?.cancel()
             return true
@@ -238,15 +246,9 @@ class MainActivity : RxAppCompatActivity() {
         override fun onLoadResource(view: WebView?, url: String?) {
             super.onLoadResource(view, url)
             Log.i("TAG", "正在加载：$url")
-
         }
 
-        override fun onReceivedError(
-            view: WebView?,
-            errorCode: Int,
-            description: String?,
-            failingUrl: String?
-        ) {
+        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
             super.onReceivedError(view, errorCode, description, failingUrl)
             Log.e("TAG", "加载失败2: -- url:${failingUrl}, description:${description}")
             homePageReload()
@@ -259,7 +261,6 @@ class MainActivity : RxAppCompatActivity() {
             error: WebResourceError?
         ) {
             super.onReceivedError(view, request, error)
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 Log.e(
                     "TAG",
@@ -283,14 +284,11 @@ class MainActivity : RxAppCompatActivity() {
         }
 
 
-        override fun onReceivedHttpError(
-            view: WebView?,
-            request: WebResourceRequest?,
-            errorResponse: WebResourceResponse?
-        ) {
+        override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
             super.onReceivedHttpError(view, request, errorResponse)
             Log.i("TAG", "onReceivedHttpError：${request}")
         }
+
 
     }
 
@@ -334,7 +332,7 @@ class MainActivity : RxAppCompatActivity() {
                 .subscribe({
                     if (!it.isSuccessful) return@subscribe
                     val bean = it.body() ?: return@subscribe
-                    if (bean.boardHomePage.isNotEmpty()) {
+                    if (bean.boardHomePage.isNullOrEmpty().not()) {
                         val isRetry = it.headers()["isRetry"]
                         if (isRetry.isNullOrEmpty()) {
                             //非重试
@@ -353,11 +351,47 @@ class MainActivity : RxAppCompatActivity() {
     }
 
     private fun homePageReload(info: BoardInfoKt? = null) {
-        info?.apply { mHomePage = boardHomePage }
+        info?.apply { if (!boardHomePage.isNullOrEmpty()) mHomePage = boardHomePage }
         Log.e("TAG", "LoadBaseUrl: $mHomePage")
         mAgentWeb.clearWebCache()
         mAgentWeb.webCreator.webView.reload()
         mAgentWeb.urlLoader.stopLoading()
         mAgentWeb.urlLoader.loadUrl(mHomePage)
     }
+
+    /**
+     * 显示更新apk对话框
+     */
+    private fun showUpdateApkDialog(force: Boolean = false, apkUpdateInfo: ApkUpdateInfoKt) {
+        if (apkUpdateInfo.appPath.isEmpty()) return
+        val dialog = AlertDialog.Builder(this).setTitle("软件更新").setMessage(
+            """
+          版本名称：v${apkUpdateInfo.appVersionName}
+          
+          更新日志：
+          ${apkUpdateInfo.appRemark}
+          
+          发现新版本，是否立即更新？
+          """
+        ).setNegativeButton("是") { dialog, _ ->
+            dialog.dismiss()
+            DownloadApkProgressDialog(this, apkUpdateInfo.appPath, force.not()).show()
+        }.create()
+        if (force) {
+            dialog.setOnKeyListener(DialogInterface.OnKeyListener { dia, keyCode, _ ->
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    dia.dismiss()
+                    mAgentWeb.webCreator.webView.loadUrl("about:blank")
+                    AgentWebConfig.clearDiskCache(this)
+                    this.finish()
+                    return@OnKeyListener true
+                }
+                false
+            })
+            dialog.setCanceledOnTouchOutside(false)
+        }
+        dialog.show()
+    }
+
+
 }
