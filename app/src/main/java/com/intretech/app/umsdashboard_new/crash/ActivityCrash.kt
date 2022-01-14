@@ -34,15 +34,11 @@ class ActivityCrash : FragmentActivity() {
             return
         }
 
-
-
         val message = CrashTool.getAllErrorDetailsFromIntent(this@ActivityCrash, intent)
         val file = log2File(message)
 
         tvLogDetails.text = message
         tvCrashErrorLocateMoreInfo.text = "${tvCrashErrorLocateMoreInfo.text}\n\n${file.absolutePath}\n"
-
-
 
         val b= Observable.timer(10L,TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io())
