@@ -14,6 +14,9 @@ android {
         longte {
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }//朗特
+        hu{
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'  //轮询首页地址接口（单位秒）
+        }//匈牙利
     }
 
     applicationVariants.all { variant ->
@@ -58,6 +61,25 @@ android {
                     outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
                 }
                 break
+            case "hu":{
+                if (isDebugMode(variant.buildType.name)) {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("hu-debug.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
+                } else {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("hu-release.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                }
+                mergedFlavor.manifestPlaceholders = [
+                        APP_NAME: tempPro['APP_NAME'],
+                ]
+                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                variant.outputs.all {
+                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
+                }
+                break
+            }
         }
     }
 }
