@@ -1,26 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="300dp"
     android:layout_height="wrap_content"
     android:background="@drawable/shape_rec_r8_bg"
-    android:backgroundTint="#333333"
-    android:maxWidth="100dp"
+    android:gravity="center"
+    android:orientation="vertical"
     android:padding="20dp">
 
-    <com.intretech.app.umsdashboard_new.widget.UpdateVersionProgressBar
-        android:id="@+id/uvProgressBar"
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
-        android:max="100"
-        app:uvProgressTextColor="@color/white"
-        app:uvProgressTextMarginTop="5dp"
-        app:uvProgressTextSize="20sp"
-        app:uvReachedBarHeight="12dp"
-        app:uvReachedColor="#FFB031"
-        app:uvTextVisibility="visible"
-        app:uvUnreachedBarHeight="2dp"
-        app:uvUnreachedColor="@color/white" />
-</FrameLayout>
+        android:gravity="center"
+        android:text="正在下载.."
+        android:textColor="@color/white" />
+
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:maxWidth="100dp"
+        android:orientation="horizontal">
+
+
+        <ProgressBar
+            android:id="@+id/pb_update"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="10dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:max="100"
+            android:progressDrawable="@drawable/progressbar_color" />
+
+        <TextView
+            android:id="@+id/tv_progress"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="0%"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_install"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_cancel_install"
+            android:layout_width="80dp"
+            android:layout_marginRight="10dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:background="@drawable/selector_download_apk_btn_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="取消安装"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/tv_install_now"
+            android:layout_width="80dp"
+            android:layout_height="30dp"
+            android:background="@drawable/selector_download_apk_btn_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="立即安装"
+            android:textColor="@color/white" />
+    </LinearLayout>
+</LinearLayout>

@@ -17,23 +17,16 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.webkit.*
-import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import com.intretech.app.umsdashboard_new.api.ServiceApi
 import com.intretech.app.umsdashboard_new.bean.ApkUpdateInfoKt
 import com.intretech.app.umsdashboard_new.bean.BoardInfoKt
 import com.intretech.app.umsdashboard_new.bean.LogMessage
 import com.intretech.app.umsdashboard_new.http.HttpHelper
+import com.intretech.app.umsdashboard_new.utils.AtyContainer
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
-import com.intretech.app.umsdashboard_new.utils.MainErrorLayoutController
 import com.intretech.app.umsdashboard_new.widget.DownloadApkProgressDialog
-import com.just.agentweb.AgentWeb
-import com.just.agentweb.AgentWebConfig
-import com.just.agentweb.WebChromeClient
-import com.just.agentweb.WebViewClient
 import com.tencent.mmkv.MMKV
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
 import com.yirong.library.annotation.NetType
 import com.yirong.library.annotation.NetworkListener
 import com.yirong.library.manager.NetworkManager
@@ -45,26 +38,16 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
 
-class MainActivity : RxAppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private var mHttpDisposable: Disposable? = null
     private var mPollingDisposable: Disposable? = null
     private var mHomePage = ""
-    private val mAgentWeb by lazy {
-        AgentWeb.with(this)
-            .setAgentWebParent(mainWebView, LinearLayout.LayoutParams(-1, -1))
-            .useDefaultIndicator(ActivityCompat.getColor(this, R.color.gray), 4)
-            .setAgentWebUIController(MainErrorLayoutController())
-            .setWebViewClient(MainWebViewClient())
-            .setWebChromeClient(MainChromeWebViewClient())
-            .createAgentWeb()
-            .get()
-    }
+    private var mWebView: WebView? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,8 +71,7 @@ class MainActivity : RxAppCompatActivity() {
      * 检查更新
      */
     private fun checkUpdateApk() {
-
-        HttpHelper.create(ServiceApi::class.java).checkAppVersion()
+        val a = HttpHelper.create(ServiceApi::class.java).checkAppVersion()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -125,8 +107,12 @@ class MainActivity : RxAppCompatActivity() {
      * */
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     private fun initWebView() {
-        if (mAgentWeb == null) return
-        mAgentWeb.webCreator.webView.apply {
+        if (mWebView == null) {
+            mWebView = WebView(this)
+            mainWebView.removeAllViews()
+            mainWebView.addView(mWebView)
+        }
+        mWebView?.apply {
             overScrollMode = View.SCROLLBARS_INSIDE_OVERLAY
 
             isHorizontalScrollBarEnabled = false
@@ -149,12 +135,16 @@ class MainActivity : RxAppCompatActivity() {
                 loadsImagesAutomatically = true //支持自动加载图片
                 loadWithOverviewMode = true     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
                 layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                }
             }
         }
-        mAgentWeb.webCreator.webParentLayout.apply {
-            setBackgroundColor(Color.TRANSPARENT)
-            setBackgroundResource(R.mipmap.img_ukanban)
-        }
+
+        /* mWebView.webParentLayout.apply {
+             setBackgroundColor(Color.TRANSPARENT)
+             setBackgroundResource(R.mipmap.img_ukanban)
+         }*/
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -172,19 +162,8 @@ class MainActivity : RxAppCompatActivity() {
         EventBus.getDefault().unregister(this)
     }
 
-    override fun onPause() {
-        mAgentWeb?.webLifeCycle?.onPause()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        mAgentWeb?.webLifeCycle?.onResume()
-        super.onResume()
-    }
 
     override fun onDestroy() {
-        mAgentWeb?.webLifeCycle?.onDestroy()
-        //mCompositeDisposable.clear()
         NetworkManager.getDefault().unRegisterAllObserver()
         super.onDestroy()
     }
@@ -204,8 +183,7 @@ class MainActivity : RxAppCompatActivity() {
         builder.setMessage("您是否要退出该软件？")
         builder.setPositiveButton("是") { dialog, _ ->
             dialog.dismiss()
-            AgentWebConfig.clearDiskCache(this)
-            finish()
+            AtyContainer.finishAllActivity()
         }
         builder.setNeutralButton("否") { dialog, _ -> dialog.dismiss() }
         builder.setNegativeButton("设置参数") { _, _ ->
@@ -279,8 +257,8 @@ class MainActivity : RxAppCompatActivity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            Log.i("TAG", "${mAgentWeb.webCreator.webView.progress} url:${url} --- 加载进度")
-            if (mAgentWeb.webCreator.webView.progress != 100) return
+            Log.i("TAG", "${mWebView?.progress} url:${url} --- 加载进度")
+            if (mWebView?.progress != 100) return
             EventBus.getDefault().post(LogMessage())
         }
 
@@ -324,6 +302,7 @@ class MainActivity : RxAppCompatActivity() {
 
     private fun refreshUIByTimer() {
         mPollingDisposable?.dispose()
+        mPollingDisposable = null
         mPollingDisposable =
             Observable.interval(0L, BuildConfig.POLLING_HOME_PAGE_URL, TimeUnit.SECONDS)
                 .flatMap { mApi.getHomePage(MMKVUtils.getMacAddrWithoutDot()) }
@@ -354,10 +333,10 @@ class MainActivity : RxAppCompatActivity() {
     private fun homePageReload(info: BoardInfoKt? = null) {
         info?.apply { if (!boardHomePage.isNullOrEmpty()) mHomePage = boardHomePage }
         Log.e("TAG", "LoadBaseUrl: $mHomePage")
-        mAgentWeb.clearWebCache()
-        mAgentWeb.webCreator.webView.reload()
-        mAgentWeb.urlLoader.stopLoading()
-        mAgentWeb.urlLoader.loadUrl(mHomePage)
+        mWebView?.apply {
+            stopLoading()
+            loadUrl(mHomePage)
+        }
     }
 
     /**
@@ -382,8 +361,7 @@ class MainActivity : RxAppCompatActivity() {
             dialog.setOnKeyListener(DialogInterface.OnKeyListener { dia, keyCode, _ ->
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
                     dia.dismiss()
-                    mAgentWeb.webCreator.webView.loadUrl("about:blank")
-                    AgentWebConfig.clearDiskCache(this)
+                    mWebView?.loadUrl("about:blank")
                     this.finish()
                     return@OnKeyListener true
                 }

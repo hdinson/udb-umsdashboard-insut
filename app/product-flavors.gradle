@@ -8,6 +8,9 @@ ext.appVersionName = "1.0.26"
 android {
     flavorDimensions "default"
     productFlavors {
+        ums{
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'  //轮询首页地址接口（单位秒）
+        }//盈趣
         insut {
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'   //轮询首页地址接口（单位秒）
         }//盈塑
@@ -23,6 +26,26 @@ android {
         def mergedFlavor = variant.mergedFlavor
         Properties tempPro = new Properties()
         switch (variant.flavorName) {
+            case "ums":
+                if (isDebugMode(variant.buildType.name)) {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("ums-debug.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
+                } else {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("ums-release.properties"))))
+                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
+                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                }
+                mergedFlavor.manifestPlaceholders = [
+                        APP_NAME: tempPro['APP_NAME'],
+                ]
+                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                variant.outputs.all {
+                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
+                }
+                ext.appVersionCode = tempPro['VERSION_CODE']
+                ext.appVersionName = tempPro['VERSION_NAME']
+                break
             case "insut":
                 if (isDebugMode(variant.buildType.name)) {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("insut-debug.properties"))))
