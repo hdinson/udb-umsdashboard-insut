@@ -33,6 +33,9 @@ object HttpHelper {
         return mRetrofit.create(tc)
     }
 
+    /**
+     * 更新baseUrl
+     */
     fun updateBaseUrl(baseUrl: String) {
         mRetrofit = Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())

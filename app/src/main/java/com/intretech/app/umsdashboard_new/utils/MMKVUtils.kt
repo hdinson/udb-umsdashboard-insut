@@ -1,7 +1,6 @@
 package com.intretech.app.umsdashboard_new.utils
 
 import android.annotation.SuppressLint
-import android.util.Log
 import com.intretech.app.umsdashboard_new.BuildConfig
 import com.tencent.mmkv.MMKV
 import java.net.NetworkInterface
@@ -75,7 +74,6 @@ object MMKVUtils {
      *
      * 0:表示系统引擎
      * 1:表示Crosswalk引擎
-     * 2:表示腾讯X5引擎
      */
     fun getRenderingEngine(): Int {
         return sAppConfig.decodeInt(KEY_RENDERING_ENGINE, 0)

@@ -1,11 +1,11 @@
-package com.intretech.app.umsdashboard_new
+package com.intretech.app.umsdashboard_new.activity
 
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.WindowManager
 import com.intretech.app.umsdashboard_new.utils.AtyContainer
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity
 
-open class BaseActivity : RxAppCompatActivity() {
+open class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
