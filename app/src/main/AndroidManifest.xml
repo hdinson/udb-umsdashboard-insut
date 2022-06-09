@@ -41,6 +41,18 @@
             android:largeHeap="true"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.FullScreen" />
+         <activity
+            android:name=".activity.WebkitSystemActivity"
+            android:exported="true"
+            android:largeHeap="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.FullScreen" />
+        <activity
+            android:name=".activity.XWalkWebViewActivity"
+            android:exported="true"
+            android:largeHeap="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.FullScreen" />
         <activity
             android:name=".crash.ActivityCrash"
             android:exported="true"

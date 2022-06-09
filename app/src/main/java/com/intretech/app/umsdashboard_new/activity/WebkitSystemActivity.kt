@@ -2,10 +2,12 @@ package com.intretech.app.umsdashboard_new.activity
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.util.DisplayMetrics
@@ -23,6 +25,13 @@ import kotlin.math.sqrt
 class WebkitSystemActivity : BaseWebViewActivity() {
 
     private var mWebView: WebView? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
+    }
 
     /**
      * 初始化WebView
@@ -51,11 +60,12 @@ class WebkitSystemActivity : BaseWebViewActivity() {
             setBackgroundResource(R.mipmap.img_ukanban)
             settings.apply {
                 javaScriptEnabled = true //启用js
+                useWideViewPort = false     //自适应由web实现，否则会出现图表等布局变形
                 javaScriptCanOpenWindowsAutomatically = true//支持通过JS打开新窗口
                 domStorageEnabled = true //保存数据
                 blockNetworkImage = false //解决图片不显示
                 loadsImagesAutomatically = true //支持自动加载图片
-                loadWithOverviewMode = true     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
+                loadWithOverviewMode = false     //当页面宽度大于WebView宽度时，缩小使页面宽度等于WebView宽度
                 layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                     //才可以点击之后正常播放音频
@@ -114,7 +124,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
                 when (msg?.what) {
                     0x01 -> {
                         currentUrlReload()
-                        EventBus.getDefault().post(LogMessage("Reloading page.."))
+                        EventBus.getDefault().post(LogMessage("页面正在重新加载.."))
                     }
                 }
             }
@@ -170,6 +180,5 @@ class WebkitSystemActivity : BaseWebViewActivity() {
             super.onReceivedHttpError(view, request, errorResponse)
             Log.i("TAG", "onReceivedHttpError：${request}")
         }
-
     }
 }

@@ -35,7 +35,6 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
         //开启web调试模式
         XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true)
         mWebView?.apply {
-
             overScrollMode = View.SCROLLBARS_INSIDE_OVERLAY
 
             isHorizontalScrollBarEnabled = false
@@ -56,7 +55,7 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
                 loadWithOverviewMode = false
                 javaScriptEnabled = true                        //支持js
                 javaScriptCanOpenWindowsAutomatically = true    //支持通过JS打开新窗口
-                useWideViewPort = true                          //将图片调整到合适webview的大小
+                useWideViewPort = false                         //一定要false，否则在一些看板上自适应不好会变形
                 loadWithOverviewMode = true                     //缩放至屏幕的大小
                 loadsImagesAutomatically = true                 //支持自动加载图片
                 supportMultipleWindows()                        //支持多窗口
@@ -75,5 +74,10 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         mWebView?.onNewIntent(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mWebView?.onDestroy()
     }
 }

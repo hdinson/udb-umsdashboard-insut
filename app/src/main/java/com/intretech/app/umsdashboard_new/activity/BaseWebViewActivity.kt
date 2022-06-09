@@ -55,8 +55,8 @@ abstract class BaseWebViewActivity : XWalkActivity() {
             loadBaseUrl()
         }
 
-        NetworkManager.getDefault().init(application)
-        NetworkManager.getDefault().registerObserver(this)
+        /*NetworkManager.getDefault().init(application)
+        NetworkManager.getDefault().registerObserver(this)*/
         checkUpdateApk()
     }
 
