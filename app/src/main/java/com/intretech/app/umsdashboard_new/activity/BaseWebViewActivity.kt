@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import com.intretech.app.umsdashboard_new.BuildConfig
 import com.intretech.app.umsdashboard_new.R
 import com.intretech.app.umsdashboard_new.api.ServiceApi
@@ -253,5 +254,14 @@ abstract class BaseWebViewActivity : XWalkActivity() {
             tv.visibility = View.VISIBLE
             tv.text = text
         }
+    }
+
+    /**
+     * 设置中间布局
+     */
+    fun setCenterLayout(isShow: Boolean, icId: Int?, text: String? ) {
+        gCenterLayout.visibility = if (isShow) View.VISIBLE else View.GONE
+        Glide.with(this).load(icId).into(ivCenterIcon)
+        text?.let { tvCenterText.text = it }
     }
 }

@@ -1,3 +1,7 @@
 <resources>
+    <string name="main_center_no_board">未设置看板\n请联系管理员进行配置</string>
+    <string name="main_center_board_error">访问异常\n详情请咨询系统管理员</string>
+    <string name="main_center_net_error">网络异常\n详情请咨询系统管理员</string>
+    <string name="main_center_board_url_error">当前看板地址配置有误\n请返回管理端检查配置</string>
 
 </resources>

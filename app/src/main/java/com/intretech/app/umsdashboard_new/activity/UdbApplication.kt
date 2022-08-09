@@ -22,7 +22,7 @@ class UdbApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-
+        xcrash.XCrash.init(this)
         CrashProfile.Builder.create().enabled(true)
             .enabled(true) //default: true
             .showErrorDetails(true) //default: true

@@ -4,12 +4,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.http.SslError
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.webkit.ValueCallback
 import android.widget.FrameLayout
 import com.intretech.app.umsdashboard_new.R
 import org.xwalk.core.XWalkPreferences
+import org.xwalk.core.XWalkResourceClient
+import org.xwalk.core.XWalkUIClient
 import org.xwalk.core.XWalkView
 import kotlin.math.sqrt
 
@@ -19,7 +24,7 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
 
 
     override fun onWebViewLoadUrl(url: String?) {
-         if (isXWalkReady) {
+        if (isXWalkReady) {
             mWebView?.loadUrl(url)
         }
     }
@@ -39,7 +44,8 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
 
             isHorizontalScrollBarEnabled = false
             isVerticalScrollBarEnabled = false
-            setBackgroundColor(Color.TRANSPARENT)
+
+
             setBackgroundResource(R.mipmap.img_ukanban)
 
             val manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -66,14 +72,23 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
                 allowContentAccess = true
                 domStorageEnabled = true
             }
+
+            setUIClient(object :XWalkUIClient(this){
+                override fun onPageLoadStarted(view: XWalkView?, url: String?) {
+                    super.onPageLoadStarted(view, url)
+                    Log.w("TAG", "--------开始加载界面：$url")
+                    setCenterLayout(true, R.mipmap.video_loading, "看板加载中..")
+                }
+
+                override fun onPageLoadStopped(view: XWalkView?, url: String?, status: LoadStatus?) {
+                    super.onPageLoadStopped(view, url, status)
+                    Log.w("TAG", "-----------结束加载：$url")
+                    setCenterLayout(false, R.mipmap.video_loading, "")
+                }
+            })
             requestFocus()
         }
         currentUrlReload()//刷新一下界面
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        mWebView?.onNewIntent(intent)
     }
 
     override fun onDestroy() {

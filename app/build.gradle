@@ -63,5 +63,6 @@ dependencies {
     implementation 'org.xwalk:xwalk_core_library:23.53.589.4'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.11.0'
     implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar' /*实时权限*/
-
+    implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.0.0'
+    implementation 'com.github.bumptech.glide:glide:4.12.0'/*Glide*/
 }

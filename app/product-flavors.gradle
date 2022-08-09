@@ -79,7 +79,7 @@ android {
             }
         }
 
-        def appName = isDebugMode(variant.buildType.name) ? "uKanban4.0" : "uKanban Alpha"
+        def appName = isDebugMode(variant.buildType.name) ? "uKanban Alpha" : "uKanban3.0"
         mergedFlavor.manifestPlaceholders = [
                 APP_NAME: appName,
         ]
