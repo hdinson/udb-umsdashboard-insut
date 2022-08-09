@@ -1,4 +1,4 @@
-static def releaseTime() { return new Date().format("MMddHHmm") }
+static def releaseTime() { return new Date().format("YYMMdd_HHmm") }
 
 static def isDebugMode(String buildType) { return buildType == "debug" }
 
@@ -8,24 +8,28 @@ ext.appVersionName = "1.0.26"
 android {
     flavorDimensions "default"
     productFlavors {
-        //盈趣
-        ums{
-            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'  //轮询首页地址接口（单位秒）
-        }
-        //盈塑
-        insut {
-            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'   //轮询首页地址接口（单位秒）
-        }
-        //朗特
-        longte {
+        baseline {
+            //基线版
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }
-        //匈牙利
-        hu{
-            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'  //轮询首页地址接口（单位秒）
+        ums {
+            //盈趣
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }
-        //沛乐迪
-        purity{
+        insut {
+            //盈塑
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'   //轮询首页地址接口（单位秒）
+        }
+        longte {
+            //朗特
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
+        }
+        hu {
+            //匈牙利
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
+        }
+        purity {
+            //沛乐迪
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }
     }
@@ -33,103 +37,62 @@ android {
     applicationVariants.all { variant ->
         def mergedFlavor = variant.mergedFlavor
         Properties tempPro = new Properties()
+        def appFileName = ""
         switch (variant.flavorName) {
+            case "baseline":
+                if (isDebugMode(variant.buildType.name)) {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("baseline-debug.properties"))))
+                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
+                } else {
+                    tempPro.load(new InputStreamReader(new FileInputStream(file("baseline-release.properties"))))
+                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                }
+                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                appFileName = "基线版3.0"
+                break
             case "ums":
                 if (isDebugMode(variant.buildType.name)) {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("ums-debug.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
                 } else {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("ums-release.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', '""'
                 }
-                mergedFlavor.manifestPlaceholders = [
-                        APP_NAME: tempPro['APP_NAME'],
-                ]
                 buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                variant.outputs.all {
-                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
-                }
-                ext.appVersionCode = tempPro['VERSION_CODE']
-                ext.appVersionName = tempPro['VERSION_NAME']
+                appFileName = "盈趣版3.0"
                 break
-            case "insut":
-                if (isDebugMode(variant.buildType.name)) {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("insut-debug.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
-                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
-                } else {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("insut-release.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
-                    buildConfigField 'String', 'MAC_ADDRESS', '""'
-                }
-                mergedFlavor.manifestPlaceholders = [
-                        APP_NAME: tempPro['APP_NAME'],
-                ]
-                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                variant.outputs.all {
-                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
-                }
-                ext.appVersionCode = tempPro['VERSION_CODE']
-                ext.appVersionName = tempPro['VERSION_NAME']
-                break
-            case "longte":
-                if (isDebugMode(variant.buildType.name)) {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("longte-debug.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
-                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
-                } else {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("longte-release.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
-                    buildConfigField 'String', 'MAC_ADDRESS', '""'
-                }
-                mergedFlavor.manifestPlaceholders = [
-                        APP_NAME: tempPro['APP_NAME'],
-                ]
-                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                variant.outputs.all {
-                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
-                }
-                break
-            case "hu":{
+            case "hu": {
                 if (isDebugMode(variant.buildType.name)) {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("hu-debug.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
                 } else {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("hu-release.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', '""'
                 }
-                mergedFlavor.manifestPlaceholders = [
-                        APP_NAME: tempPro['APP_NAME'],
-                ]
                 buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                variant.outputs.all {
-                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
-                }
+                appFileName = "匈牙利版3.0"
                 break
             }
-            case "purity":{
+            case "purity": {
                 if (isDebugMode(variant.buildType.name)) {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("purity-debug.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
                 } else {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("purity-release.properties"))))
-                    mergedFlavor.setApplicationId("com.intretech.app.umsdashboard_new")
                     buildConfigField 'String', 'MAC_ADDRESS', '""'
                 }
-                mergedFlavor.manifestPlaceholders = [
-                        APP_NAME: tempPro['APP_NAME'],
-                ]
                 buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                variant.outputs.all {
-                    outputFileName = "${tempPro['APP_NAME']}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
-                }
+                appFileName = "沛乐迪版3.0"
                 break
             }
+        }
+
+        def appName = isDebugMode(variant.buildType.name) ? "uKanban4.0" : "uKanban Alpha"
+        mergedFlavor.manifestPlaceholders = [
+                APP_NAME: appName,
+        ]
+        variant.outputs.all {
+            outputFileName = "${appFileName}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
         }
     }
 }
