@@ -259,9 +259,8 @@ abstract class BaseWebViewActivity : XWalkActivity() {
     /**
      * 设置中间布局
      */
-    fun setCenterLayout(isShow: Boolean, icId: Int?, text: String? ) {
+    fun setCenterLayout(isShow: Boolean  ) {
         gCenterLayout.visibility = if (isShow) View.VISIBLE else View.GONE
-        Glide.with(this).load(icId).into(ivCenterIcon)
-        text?.let { tvCenterText.text = it }
+
     }
 }

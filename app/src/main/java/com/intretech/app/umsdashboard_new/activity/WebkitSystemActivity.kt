@@ -57,7 +57,6 @@ class WebkitSystemActivity : BaseWebViewActivity() {
             val scaleNumber = (scaleRate * 100).toInt()
             setInitialScale(scaleNumber)
             setBackgroundColor(Color.TRANSPARENT)
-            setBackgroundResource(R.mipmap.img_ukanban)
             settings.apply {
                 javaScriptEnabled = true //启用js
                 useWideViewPort = false     //自适应由web实现，否则会出现图表等布局变形
@@ -78,11 +77,6 @@ class WebkitSystemActivity : BaseWebViewActivity() {
             webChromeClient = MainChromeWebViewClient()
             webViewClient = MainWebViewClient()
         }
-
-        /* mWebView.webParentLayout.apply {
-             setBackgroundColor(Color.TRANSPARENT)
-             setBackgroundResource(R.mipmap.img_ukanban)
-         }*/
     }
 
     override fun onWebViewLoadUrl(url: String?) {

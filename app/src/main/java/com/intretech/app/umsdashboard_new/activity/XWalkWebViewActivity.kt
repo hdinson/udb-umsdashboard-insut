@@ -2,21 +2,25 @@ package com.intretech.app.umsdashboard_new.activity
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.net.http.SslError
+import android.graphics.drawable.Drawable
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.webkit.ValueCallback
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.intretech.app.umsdashboard_new.R
 import org.xwalk.core.XWalkPreferences
-import org.xwalk.core.XWalkResourceClient
 import org.xwalk.core.XWalkUIClient
 import org.xwalk.core.XWalkView
 import kotlin.math.sqrt
+
 
 class XWalkWebViewActivity : BaseWebViewActivity() {
 
@@ -45,8 +49,7 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
             isHorizontalScrollBarEnabled = false
             isVerticalScrollBarEnabled = false
 
-
-            setBackgroundResource(R.mipmap.img_ukanban)
+            setBackgroundColor(ContextCompat.getColor(this@XWalkWebViewActivity,R.color.baseBackground))
 
             val manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val outMetrics = DisplayMetrics()
@@ -56,6 +59,8 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
             val scaleRate = sqrt((screenWidth * screenWidth + screenHeight * screenHeight).toDouble()).toFloat() / sqrt((1920 * 1920 + 1080 * 1080).toDouble()).toFloat() // 使用对角线比
             val scaleNumber = (scaleRate * 100).toInt()
             setInitialScale(scaleNumber)
+
+
 
             settings.apply {
                 loadWithOverviewMode = false
@@ -77,13 +82,13 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
                 override fun onPageLoadStarted(view: XWalkView?, url: String?) {
                     super.onPageLoadStarted(view, url)
                     Log.w("TAG", "--------开始加载界面：$url")
-                    setCenterLayout(true, R.mipmap.video_loading, "看板加载中..")
+                    setCenterLayout(true )
                 }
 
                 override fun onPageLoadStopped(view: XWalkView?, url: String?, status: LoadStatus?) {
                     super.onPageLoadStopped(view, url, status)
                     Log.w("TAG", "-----------结束加载：$url")
-                    setCenterLayout(false, R.mipmap.video_loading, "")
+                    setCenterLayout(false )
                 }
             })
             requestFocus()
