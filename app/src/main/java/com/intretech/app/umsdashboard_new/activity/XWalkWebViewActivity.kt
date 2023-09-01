@@ -2,20 +2,13 @@ package com.intretech.app.umsdashboard_new.activity
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.intretech.app.umsdashboard_new.R
+import com.intretech.app.umsdashboard_new.utils.logi
 import org.xwalk.core.XWalkPreferences
 import org.xwalk.core.XWalkUIClient
 import org.xwalk.core.XWalkView
@@ -49,7 +42,7 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
             isHorizontalScrollBarEnabled = false
             isVerticalScrollBarEnabled = false
 
-            setBackgroundColor(ContextCompat.getColor(this@XWalkWebViewActivity,R.color.baseBackground))
+            setBackgroundColor(ContextCompat.getColor(this@XWalkWebViewActivity, R.color.baseBackground))
 
             val manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val outMetrics = DisplayMetrics()
@@ -78,17 +71,17 @@ class XWalkWebViewActivity : BaseWebViewActivity() {
                 domStorageEnabled = true
             }
 
-            setUIClient(object :XWalkUIClient(this){
+            setUIClient(object : XWalkUIClient(this) {
                 override fun onPageLoadStarted(view: XWalkView?, url: String?) {
                     super.onPageLoadStarted(view, url)
-                    Log.w("TAG", "--------开始加载界面：$url")
-                    setCenterLayout(true )
+                    logi { "--------开始加载界面：$url" }
+                    setCenterLayout(true)
                 }
 
                 override fun onPageLoadStopped(view: XWalkView?, url: String?, status: LoadStatus?) {
                     super.onPageLoadStopped(view, url, status)
-                    Log.w("TAG", "-----------结束加载：$url")
-                    setCenterLayout(false )
+                    logi { "-----------结束加载：$url" }
+                    setCenterLayout(false)
                 }
             })
             requestFocus()

@@ -3,14 +3,12 @@ package com.intretech.app.umsdashboard_new.activity
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
-import com.bumptech.glide.Glide
 import com.intretech.app.umsdashboard_new.BuildConfig
 import com.intretech.app.umsdashboard_new.R
 import com.intretech.app.umsdashboard_new.api.ServiceApi
@@ -20,6 +18,8 @@ import com.intretech.app.umsdashboard_new.bean.LogMessage
 import com.intretech.app.umsdashboard_new.http.HttpHelper
 import com.intretech.app.umsdashboard_new.utils.AtyContainer
 import com.intretech.app.umsdashboard_new.utils.MMKVUtils
+import com.intretech.app.umsdashboard_new.utils.loge
+import com.intretech.app.umsdashboard_new.utils.logi
 import com.intretech.app.umsdashboard_new.widget.DownloadApkProgressDialog
 import com.yirong.library.annotation.NetType
 import com.yirong.library.annotation.NetworkListener
@@ -99,7 +99,7 @@ abstract class BaseWebViewActivity : XWalkActivity() {
                             //非重试
                             if (mHomePage != bean.boardHomePage) {
                                 //未加载网页，或者服务端更新网页地址，重新加载
-                                Log.e("TAG", "未加载网页，或者服务端更新网页地址，重新加载")
+                                loge { "未加载网页，或者服务端更新网页地址，重新加载" }
                                 homePageReload(bean)
                             }
                         } else {
@@ -238,7 +238,7 @@ abstract class BaseWebViewActivity : XWalkActivity() {
 
     private fun homePageReload(info: BoardInfoKt? = null) {
         info?.apply { if (!boardHomePage.isNullOrEmpty()) mHomePage = boardHomePage }
-        Log.e("TAG", "LoadBaseUrl: $mHomePage")
+        logi { "LoadBaseUrl: $mHomePage" }
         currentUrlReload()
     }
 

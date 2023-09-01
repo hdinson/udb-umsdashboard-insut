@@ -13,13 +13,13 @@ interface ServiceApi {
      * 获取界面的加载地址
      */
     @Headers("Domain-Name: uKanban")
-    @GET("/API/Base/Board/NonLogin/BoardEvent/GetBoardFormJson?version=${BuildConfig.VERSION_NAME}")
+    @GET("API/Base/Board/NonLogin/BoardEvent/GetBoardFormJson?version=${BuildConfig.VERSION_NAME}")
     fun getHomePage(@Query("MacAddress") MacAddress: String): Observable<Response<BoardInfoKt>>
 
     /**
      * 版本更新
      */
-    @GET("/API/Base/Board/NonLogin/BoardConfigureEvent/GetBoardConfigureJson")
+    @GET("API/Base/Board/NonLogin/BoardConfigureEvent/GetBoardConfigureJson")
     fun checkAppVersion():Observable<ApkUpdateInfoKt>
 
 }

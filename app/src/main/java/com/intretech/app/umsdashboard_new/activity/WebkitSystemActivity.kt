@@ -2,7 +2,6 @@ package com.intretech.app.umsdashboard_new.activity
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -11,15 +10,16 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
-import com.intretech.app.umsdashboard_new.R
 import com.intretech.app.umsdashboard_new.bean.LogMessage
+import com.intretech.app.umsdashboard_new.utils.loge
+import com.intretech.app.umsdashboard_new.utils.logi
 import org.greenrobot.eventbus.EventBus
+import java.io.File
 import kotlin.math.sqrt
 
 class WebkitSystemActivity : BaseWebViewActivity() {
@@ -73,6 +73,8 @@ class WebkitSystemActivity : BaseWebViewActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 }
+                setAppCacheEnabled(false)
+                cacheMode = WebSettings.LOAD_NO_CACHE
             }
             webChromeClient = MainChromeWebViewClient()
             webViewClient = MainWebViewClient()
@@ -86,7 +88,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
 
     inner class MainChromeWebViewClient : WebChromeClient() {
 
-        private var callback: CustomViewCallback?=null
+        private var callback: CustomViewCallback? = null
 
         override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
             Toast.makeText(this@WebkitSystemActivity, message, Toast.LENGTH_SHORT).show()
@@ -125,18 +127,18 @@ class WebkitSystemActivity : BaseWebViewActivity() {
         }
 
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            Log.i("TAG", "开始加载界面：$url")
+            logi { "开始加载界面：$url" }
             super.onPageStarted(view, url, favicon)
         }
 
         override fun onLoadResource(view: WebView?, url: String?) {
             super.onLoadResource(view, url)
-            Log.i("TAG", "正在加载：$url")
+            logi { "正在加载：$url" }
         }
 
         override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
             super.onReceivedError(view, errorCode, description, failingUrl)
-            Log.e("TAG", "加载失败2: -- url:${failingUrl}, description:${description}")
+            loge { "加载失败2: -- url:${failingUrl}, description:${description}" }
             currentUrlReload()
         }
 
@@ -148,10 +150,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
         ) {
             super.onReceivedError(view, request, error)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Log.e(
-                    "TAG",
-                    "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}"
-                )
+                loge { "加载失败: -- url:${request?.url}, isForMainFrame:${request?.isForMainFrame}" }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (request?.isForMainFrame == false) return
                     EventBus.getDefault().post(LogMessage(error?.description.toString()))
@@ -164,7 +163,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            Log.i("TAG", "${mWebView?.progress} url:${url} --- 加载进度")
+            logi { "${mWebView?.progress} url:${url} --- 加载进度" }
             if (mWebView?.progress != 100) return
             EventBus.getDefault().post(LogMessage())
         }
@@ -172,7 +171,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
 
         override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
             super.onReceivedHttpError(view, request, errorResponse)
-            Log.i("TAG", "onReceivedHttpError：${request}")
+            loge { "onReceivedHttpError：${request}" }
         }
     }
 }

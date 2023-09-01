@@ -89,7 +89,7 @@ object MMKVUtils {
 
 
     private fun getNetMac(): String {
-        if (BuildConfig.DEBUG && BuildConfig.MAC_ADDRESS.isNotEmpty()) {
+        if (BuildConfig.MAC_ADDRESS.isNotEmpty()) {
             return BuildConfig.MAC_ADDRESS
         }
         val interfaces = NetworkInterface.getNetworkInterfaces()

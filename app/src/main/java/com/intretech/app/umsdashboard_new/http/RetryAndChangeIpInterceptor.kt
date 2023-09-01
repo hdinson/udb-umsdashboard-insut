@@ -1,7 +1,7 @@
 package com.intretech.app.umsdashboard_new.http
 
-import android.util.Log
 import com.intretech.app.umsdashboard_new.bean.LogMessage
+import com.intretech.app.umsdashboard_new.utils.logi
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -21,7 +21,7 @@ class RetryAndChangeIpInterceptor(private val maxRetryCount: Int, private val re
         while (response == null && tryCount <= maxRetryCount) {
             url = switchServer(url)
             val newRequest = request.newBuilder().url(url).build()
-            Log.d("intercept", "Request is not successful - $tryCount")
+            logi { "Request is not successful - $tryCount" }
             EventBus.getDefault().post(LogMessage("接口请求不成功，正在重试 - ${tryCount + 1} 次"))
             tryCount++
             // retry the request

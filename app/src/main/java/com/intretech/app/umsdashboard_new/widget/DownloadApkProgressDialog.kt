@@ -6,13 +6,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.core.content.FileProvider
 import com.intretech.app.umsdashboard_new.R
 import com.intretech.app.umsdashboard_new.download.RxNet
 import com.intretech.app.umsdashboard_new.download.callback.DownloadCallback
+import com.intretech.app.umsdashboard_new.utils.loge
+import com.intretech.app.umsdashboard_new.utils.logw
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.app_progress_download.*
 import java.io.File
@@ -69,7 +70,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
      */
     private fun downloadApk() {
         if (context.externalCacheDir == null) {
-            Log.e("TAG", "下载失败，externalCacheDir==null")
+            loge { "下载失败，externalCacheDir==null" }
             return
         }
 
@@ -77,11 +78,11 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
         val path = context.externalCacheDir!!.path + File.separator + System.currentTimeMillis() + fileName
         RxNet.download(url, path, object : DownloadCallback {
             override fun onStart(d: Disposable?) {
-                Log.w("TAG", "onStart: 开始下载")
+                loge { "onStart: 开始下载" }
             }
 
             override fun onProgress(totalByte: Long, currentByte: Long, progress: Int) {
-                Log.w("TAG", "totalByte:$totalByte, currentByte:$currentByte, progress:$progress")
+                logw { "totalByte:$totalByte, currentByte:$currentByte, progress:$progress" }
 
                 val pro = currentByte * 100 / totalByte
                 pb_update.progress = progress
@@ -89,7 +90,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
             }
 
             override fun onFinish(file: File?) {
-                Log.w("TAG", "onFinish " + file?.absolutePath)
+                logw { "onFinish " + file?.absolutePath }
                 ll_install.visibility = View.VISIBLE
                 tv_install_now.requestFocus()
                 mLocaleFilePath = file?.absolutePath
@@ -97,7 +98,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
             }
 
             override fun onError(msg: String?) {
-                Log.w("TAG", "onError $msg")
+                loge { "onError $msg" }
                 this@DownloadApkProgressDialog.dismiss()
             }
         })
@@ -140,7 +141,7 @@ class DownloadApkProgressDialog @JvmOverloads constructor(context: Context, val 
     //安装apk
     private fun installApkByGuide() {
         if (mLocaleFilePath.isNullOrEmpty()) {
-            Log.e("TAG", "本地安装地址不能为空")
+            loge { "本地安装地址不能为空" }
             return
         }
         val intent = Intent(Intent.ACTION_VIEW)

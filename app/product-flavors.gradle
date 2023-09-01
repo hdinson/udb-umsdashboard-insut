@@ -20,16 +20,27 @@ android {
             //匈牙利
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
         }
-        purity {
-            //沛乐迪
+        fy {
+            //福耀数字化看板
+            applicationId "com.intretech.ukabban.fy"
             buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '20'  //轮询首页地址接口（单位秒）
+        }
+        fyyear {
+            applicationId "com.intretech.app.fyyear"
+            //福耀年度看板，需要和yf装在同一台电视上，所以包名不同
+            buildConfigField 'long', 'POLLING_HOME_PAGE_URL', '0'  //轮询首页地址接口（单位秒）
         }
     }
 
     applicationVariants.all { variant ->
-        def mergedFlavor = variant.mergedFlavor
+        variant.mergedFlavor.manifestPlaceholders = [
+                APP_NAME: "uKanban3.0",
+        ]
+        buildConfigField 'String', 'MAC_ADDRESS', '""'
+
         Properties tempPro = new Properties()
         def appFileName = ""
+
         switch (variant.flavorName) {
             case "baseline":
                 if (isDebugMode(variant.buildType.name)) {
@@ -48,41 +59,35 @@ android {
                     buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
                 } else {
                     tempPro.load(new InputStreamReader(new FileInputStream(file("ums-release.properties"))))
-                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+
                 }
                 buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
                 appFileName = "盈趣版3.0"
                 break
             case "hu": {
-                if (isDebugMode(variant.buildType.name)) {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("hu-debug.properties"))))
-                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
-                } else {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("hu-release.properties"))))
-                    buildConfigField 'String', 'MAC_ADDRESS', '""'
-                }
-                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
+                buildConfigField 'String', 'BASE_URL', '"http://ums.intretech.hu/"'
                 appFileName = "匈牙利版3.0"
                 break
             }
-            case "purity": {
+            case "fy": {
                 if (isDebugMode(variant.buildType.name)) {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("purity-debug.properties"))))
-                    buildConfigField 'String', 'MAC_ADDRESS', tempPro['MAC_ADDRESS']
-                } else {
-                    tempPro.load(new InputStreamReader(new FileInputStream(file("purity-release.properties"))))
-                    buildConfigField 'String', 'MAC_ADDRESS', '""'
+                    buildConfigField 'String', 'MAC_ADDRESS', '"20:72:A9:5F:29:1D"'
                 }
-                buildConfigField 'String', 'BASE_URL', tempPro['BASE_URL']
-                appFileName = "沛乐迪版3.0"
+                buildConfigField 'String', 'BASE_URL', '"http://10.130.79.102:3131/bsm/"'
+                appFileName = "福耀版3.0"
+                break
+            }
+            case "fyyear": {
+                buildConfigField 'String', 'MAC_ADDRESS', '"10:00:00:00:00:01"'
+                buildConfigField 'String', 'BASE_URL', '"http://10.130.79.102:3131/bsm/"'
+                appFileName = "福耀年度看板"
+                variant.mergedFlavor.manifestPlaceholders = [
+                        APP_NAME: "年度看板",
+                ]
                 break
             }
         }
 
-        def appName = isDebugMode(variant.buildType.name) ? "uKanban Alpha" : "uKanban3.0"
-        mergedFlavor.manifestPlaceholders = [
-                APP_NAME: appName,
-        ]
         variant.outputs.all {
             outputFileName = "${appFileName}_${releaseTime()}_code${defaultConfig.versionCode}_name${defaultConfig.versionName}_${variant.buildType.name}.apk"
         }
