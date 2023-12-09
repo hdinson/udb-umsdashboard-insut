@@ -16,10 +16,11 @@ import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
 import com.intretech.app.umsdashboard_new.bean.LogMessage
+import com.intretech.app.umsdashboard_new.utils.AtyContainer
+import com.intretech.app.umsdashboard_new.utils.MMKVUtils
 import com.intretech.app.umsdashboard_new.utils.loge
 import com.intretech.app.umsdashboard_new.utils.logi
 import org.greenrobot.eventbus.EventBus
-import java.io.File
 import kotlin.math.sqrt
 
 class WebkitSystemActivity : BaseWebViewActivity() {
@@ -76,6 +77,7 @@ class WebkitSystemActivity : BaseWebViewActivity() {
                 setAppCacheEnabled(false)
                 cacheMode = WebSettings.LOAD_NO_CACHE
             }
+            addJavascriptInterface(UkanbanJavaScriptObject(), "ukanban")
             webChromeClient = MainChromeWebViewClient()
             webViewClient = MainWebViewClient()
         }
@@ -106,6 +108,29 @@ class WebkitSystemActivity : BaseWebViewActivity() {
         override fun onHideCustomView() {
             super.onHideCustomView()
             callback?.onCustomViewHidden()
+        }
+    }
+
+    /**
+     * 与前端的交互，通过js调用
+     */
+     inner class UkanbanJavaScriptObject  {
+
+
+        @JavascriptInterface
+        fun getAndroidMac(): String {
+            return MMKVUtils.getMac()
+        }
+
+
+        @JavascriptInterface
+        fun exit() {
+            AtyContainer.finishAllActivity()
+        }
+
+        @JavascriptInterface
+        fun hideSplashLogo() {
+
         }
     }
 

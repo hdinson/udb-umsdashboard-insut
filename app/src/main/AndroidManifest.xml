@@ -15,14 +15,15 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
+        android:name=".activity.UdbApplication"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/logo"
         android:label="${APP_NAME}"
         android:largeHeap="true"
-        android:name=".activity.UdbApplication"
-        android:hardwareAccelerated="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".activity.SplashActivity"
             android:exported="true"
@@ -41,7 +42,7 @@
             android:largeHeap="true"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.FullScreen" />
-         <activity
+        <activity
             android:name=".activity.WebkitSystemActivity"
             android:exported="true"
             android:largeHeap="true"

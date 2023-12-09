@@ -21,9 +21,6 @@ import com.intretech.app.umsdashboard_new.utils.MMKVUtils
 import com.intretech.app.umsdashboard_new.utils.loge
 import com.intretech.app.umsdashboard_new.utils.logi
 import com.intretech.app.umsdashboard_new.widget.DownloadApkProgressDialog
-import com.yirong.library.annotation.NetType
-import com.yirong.library.annotation.NetworkListener
-import com.yirong.library.manager.NetworkManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -161,22 +158,6 @@ abstract class BaseWebViewActivity : XWalkActivity() {
         dialog.show()
     }
 
-    //网络监听
-    @NetworkListener(type = NetType.WIFI)
-    fun network(@NetType type: String) {
-        when (type) {
-            NetType.AUTO,
-            NetType.CMNET,
-            NetType.CMWAP,
-            NetType.WIFI -> {
-                homePageReload()
-                EventBus.getDefault().post(LogMessage("网络已连接, 正在刷新"))
-            }
-            NetType.NONE -> {
-                EventBus.getDefault().post(LogMessage("网络已断开"))
-            }
-        }
-    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: LogMessage) {
@@ -186,7 +167,7 @@ abstract class BaseWebViewActivity : XWalkActivity() {
     override fun onDestroy() {
         super.onDestroy()
         EventBus.getDefault().unregister(this)
-        NetworkManager.getDefault().unRegisterAllObserver()
+
         AtyContainer.removeActivity(this)
     }
 

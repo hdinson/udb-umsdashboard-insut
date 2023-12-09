@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import com.intretech.app.umsdashboard_new.R
 import com.intretech.app.umsdashboard_new.utils.AtyContainer
@@ -22,7 +23,12 @@ class SettingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setting)
 
-        tvVersion.text = "版本号:   v${getVersionName()}  Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
+
+        val webView = WebView(this)
+        val webViewVersion = webView.settings.userAgentString
+
+
+        tvVersion.text = "版本号:   v${getVersionName()}  Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}) 内核版本: $webViewVersion"
         tvHomePage.text = "网页加载地址: ${intent.getStringExtra(EXTRA_HOME_PAGE)}"
 
 
